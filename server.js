@@ -4,82 +4,70 @@ const nodemailer = require("nodemailer");
 
 const app = express();
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
 // Route
 app.post("/contact", async (req, res) => {
-
-    console.log("Request received!");
-    console.log(req.body);
-
-    const { name, email, message } = req.body;
-
     try {
+        const { name, email, message } = req.body;
+
+        console.log("Request received:", req.body);
+
+        if (!name || !email || !message) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            });
+        }
 
         const transporter = nodemailer.createTransport({
-
             service: "gmail",
-
             auth: {
                 user: "naleodas2027@gmail.com",
-                pass: "YOUR_NEW_APP_PASSWORD"
+                pass: "bwrrpduonakiacvf" // IMPORTANT
             }
-
         });
 
+        // EMAIL SENT TO USER (Auto Reply)
         const mailOptions = {
-
-            from: "naleodas2027@gmail.com",
-
+            from: `"EduLearn Team" <naleodas2027@gmail.com>`,
             to: email,
-
-            subject: "Thank you for contacting us",
-
+            subject: "Thanks for contacting EduLearn 🎓",
             html: `
-                <h2>Hello ${name}</h2>
-
-                <p>Thank you for contacting us.</p>
-
-                <p>We have received your message:</p>
-
-                <p>${message}</p>
-
-                <br>
-
-                <p>Our team will contact you shortly.</p>
-
+                <div>
+                    <h2>Hello ${name},</h2>
+                    <p>Thanks for contacting us!</p>
+                    <p><b>Your Message:</b></p>
+                    <p>${message}</p>
+                    <br/>
+                    <p>We will get back to you soon.</p>
+                    <hr/>
+                    <p>EduLearn Team</p>
+                </div>
             `
         };
 
-        const info = await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
 
-        console.log("Mail Sent Successfully!");
-        console.log(info);
+        console.log("Email sent successfully");
 
-        res.json({
+        return res.status(200).json({
             success: true,
-            message: "Email sent successfully!"
+            message: "Email sent successfully"
         });
 
-    }
+    } catch (error) {
+        console.log("EMAIL ERROR:", error);
 
-    catch (error) {
-
-        console.log("ERROR OCCURRED:");
-        console.log(error);
-
-        res.json({
+        return res.status(500).json({
             success: false,
-            message: "Failed to send email"
+            message: "Email sending failed",
+            error: error.message
         });
-
     }
-
 });
 
 app.listen(5000, () => {
-
     console.log("Server running on port 5000");
-
 });
